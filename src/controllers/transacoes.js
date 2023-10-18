@@ -108,4 +108,28 @@ const atualizarTransacao = async (req, res, next) => {
     }
 };
 
+const excluirTransacao = async (req, res, next) => {
+    try {
+        const id = req.id;
+        const transacaoId = req.params.id;
+
+        const { rowCount: rowCountTransacao } = await pool.query(`
+        SELECT *
+        FROM transacoes
+        WHERE id = $1 AND usuario_id = $2;
+        `, [transacaoId, id]);
+
+        if (rowCountTransacao === 0) throw new HttpError('Transação não encontrada', 404);
+
+        await pool.query(`
+        DELETE FROM transacoes
+        WHERE id = $1;
+        `, [transacaoId]);
+
+        return res.status(204).end();
+    } catch (e) {
+        next(e);
+    }
+};
+
 module.exports = { listarTransacoes, detalharTransacao, cadastrarTransacao, atualizarTransacao, excluirTransacao, obterExtratoTransacao };
