@@ -150,4 +150,4 @@ const obterExtratoTransacoes = async (req, res, next) => {
     }
 };
 
-module.exports = { listarTransacoes, detalharTransacao, cadastrarTransacao, atualizarTransacao, excluirTransacao, obterExtratoTransacao };
+module.exports = { listarTransacoes, detalharTransacao, cadastrarTransacao, atualizarTransacao, excluirTransacao, obterExtratoTransacoes };
