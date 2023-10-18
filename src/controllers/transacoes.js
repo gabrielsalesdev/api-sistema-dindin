@@ -45,4 +45,35 @@ const detalharTransacao = async (req, res, next) => {
     }
 };
 
+
+const cadastrarTransacao = async (req, res, next) => {
+    try {
+        const id = req.id;
+        const { tipo, descricao, valor, data, categoria_id } = req.body;
+
+        if (!tipo || !descricao || !valor || !data || !categoria_id) throw new HttpError('Dados obrigatórios não fornecidos', 400);
+        if (tipo !== 'entrada' && tipo !== 'saida') throw new HttpError('Tipo inválido. Deve ser \'entrada\' ou \'saida\'', 400);
+
+        const { rowCount } = await pool.query('SELECT * FROM categorias WHERE id = $1;', [categoria_id]);
+        if (rowCount === 0) throw new HttpError('Categoria não encontrada', 404);
+
+        const { rows: rowsInsert } = await pool.query(`
+            INSERT INTO transacoes (tipo, descricao, valor, data, usuario_id, categoria_id)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id
+        `, [tipo, descricao, valor, data, id, categoria_id]);
+
+        const { rows } = await pool.query(`
+            SELECT t.id, t.tipo, t.descricao, t.valor, t.data, t.usuario_id, t.categoria_id, c.descricao AS categoria_nome
+            FROM transacoes t
+            JOIN categorias c ON t.categoria_id = c.id
+            WHERE t.usuario_id = $1 AND t.id = $2;
+        `, [id, rowsInsert[0].id])
+
+        return res.status(201).json(rows[0]);
+    } catch (e) {
+        next(e);
+    }
+};
+
 module.exports = { listarTransacoes, detalharTransacao, cadastrarTransacao, atualizarTransacao, excluirTransacao, obterExtratoTransacao };
