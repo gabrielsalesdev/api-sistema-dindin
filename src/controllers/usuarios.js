@@ -21,4 +21,16 @@ const cadastrarUsuario = async (req, res, next) => {
     }
 };
 
+const detalharUsuario = async (req, res, next) => {
+    try {
+        const id = req.id;
+
+        const { rows } = await pool.query('SELECT id, nome, email FROM usuarios WHERE id = $1;', [id]);
+
+        return res.json(rows[0]);
+    } catch (e) {
+        next(e);
+    }
+};
+
 module.exports = { cadastrarUsuario, detalharUsuario, atualizarUsuario };
