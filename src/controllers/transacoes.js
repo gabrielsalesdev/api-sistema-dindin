@@ -76,4 +76,36 @@ const cadastrarTransacao = async (req, res, next) => {
     }
 };
 
+const atualizarTransacao = async (req, res, next) => {
+    try {
+        const id = req.id;
+        const transacaoId = req.params.id;
+        const { tipo, descricao, valor, data, categoria_id } = req.body;
+
+        const { rowCount: rowCountTransacao } = await pool.query(`
+        SELECT *
+        FROM transacoes
+        WHERE id = $1 AND usuario_id = $2;
+        `, [transacaoId, id]);
+
+        if (rowCountTransacao === 0) throw new HttpError('Transação não encontrada', 404);
+
+        if (!tipo || !descricao || !valor || !data || !categoria_id) throw new HttpError('Dados obrigatórios não fornecidos', 400);
+        if (tipo !== 'entrada' && tipo !== 'saida') throw new HttpError('Tipo inválido. Deve ser \'entrada\' ou \'saida\'', 400);
+
+        const { rowCount: rowCountCategoria } = await pool.query('SELECT * FROM categorias WHERE id = $1;', [categoria_id]);
+        if (rowCountCategoria === 0) throw new HttpError('Categoria não encontrada', 404);
+
+        await pool.query(`
+        UPDATE transacoes 
+        SET tipo = $1, descricao = $2, valor = $3, data = $4, usuario_id = $5, categoria_id = $6
+        WHERE id = $7;
+        `, [tipo, descricao, valor, data, id, categoria_id, transacaoId]);
+
+        return res.status(204).end();
+    } catch (e) {
+        next(e);
+    }
+};
+
 module.exports = { listarTransacoes, detalharTransacao, cadastrarTransacao, atualizarTransacao, excluirTransacao, obterExtratoTransacao };
