@@ -25,4 +25,24 @@ const listarTransacoes = async (req, res, next) => {
     }
 };
 
+const detalharTransacao = async (req, res, next) => {
+    try {
+        const id = req.id;
+        const transacaoId = req.params.id;
+
+        const { rows, rowCount } = await pool.query(`
+            SELECT t.id, t.tipo, t.descricao, t.valor, t.data, t.usuario_id, t.categoria_id, c.descricao AS categoria_nome
+            FROM transacoes t
+            JOIN categorias c ON t.categoria_id = c.id
+            WHERE t.usuario_id = $1 AND t.id = $2;
+        `, [id, transacaoId]);
+
+        if (rowCount === 0) throw new HttpError('Transação não encontrada', 404);
+
+        return res.json(rows[0]);
+    } catch (e) {
+        next(e);
+    }
+};
+
 module.exports = { listarTransacoes, detalharTransacao, cadastrarTransacao, atualizarTransacao, excluirTransacao, obterExtratoTransacao };
