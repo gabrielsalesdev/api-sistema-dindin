@@ -132,4 +132,22 @@ const excluirTransacao = async (req, res, next) => {
     }
 };
 
+const obterExtratoTransacoes = async (req, res, next) => {
+    try {
+        const id = req.id;
+
+        const { rows: rowsEntrada } = await pool.query('SELECT COALESCE(SUM(valor), 0) AS entrada FROM transacoes WHERE usuario_id = $1 AND tipo = $2', [id, 'entrada']);
+        const { rows: rowsSaida } = await pool.query('SELECT COALESCE(SUM(valor), 0) AS saida FROM transacoes WHERE usuario_id = $1 AND tipo = $2', [id, 'saida']);
+
+        const extrato = {
+            entrada: Number(rowsEntrada[0].entrada),
+            saida: Number(rowsSaida[0].saida)
+        };
+
+        res.json(extrato);
+    } catch (e) {
+
+    }
+};
+
 module.exports = { listarTransacoes, detalharTransacao, cadastrarTransacao, atualizarTransacao, excluirTransacao, obterExtratoTransacao };
